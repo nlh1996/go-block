@@ -1,9 +1,6 @@
 package block
 
 import (
-	"bytes"
-	"crypto/sha256"
-	"strconv"
 	"time"
 )
 
@@ -13,6 +10,7 @@ type Block struct {
 	Data          []byte
 	PrevBlockHash []byte
 	Hash          []byte
+	Nonce         int
 }
 
 // Blockchain 区块链
@@ -33,8 +31,13 @@ func GetInstance() *Blockchain {
 
 // NewBlock .
 func newBlock(data string, prevBlockHash []byte) *Block {
-	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}}
-	block.setHash()
+	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, []byte{}, 0}
+	pow := NewProofOfWork(block)
+	nonce, hash := pow.Run()
+
+	block.Hash = hash[:]
+	block.Nonce = nonce
+
 	return block
 }
 
@@ -48,12 +51,12 @@ func newBlockChain() *Blockchain {
 	return &Blockchain{[]*Block{newGenesisBlock()}}
 }
 
-func (b *Block) setHash() {
-	timestamp := []byte(strconv.FormatInt(b.Timestamp, 10))
-	headers := bytes.Join([][]byte{b.PrevBlockHash, b.Data, timestamp}, []byte{})
-	hash := sha256.Sum256(headers)
-	b.Hash = hash[:]
-}
+// func (b *Block) setHash() {
+// 	timestamp := []byte(strconv.FormatInt(b.Timestamp, 10))
+// 	headers := bytes.Join([][]byte{b.PrevBlockHash, b.Data, timestamp}, []byte{})
+// 	hash := sha256.Sum256(headers)
+// 	b.Hash = hash[:]
+// }
 
 // AddBlock .
 func (bc *Blockchain) AddBlock(data string) {
@@ -65,4 +68,9 @@ func (bc *Blockchain) AddBlock(data string) {
 // GetBlockByIndex .
 func (bc *Blockchain) GetBlockByIndex(index int) *Block {
 	return bc.blocks[index-1]
+}
+
+// GetBlockchain .
+func (bc *Blockchain) GetBlockchain() []*Block {
+	return bc.blocks
 }

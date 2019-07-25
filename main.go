@@ -3,14 +3,21 @@ package main
 import (
 	"fmt"
 	"go-bot/block"
+	"go-bot/dao"
+	"strconv"
 )
 
 func main() {
 	bc := block.GetInstance()
 	bc.AddBlock("Send 1 BTC to Ivan")
-	bc.AddBlock("Send 2 more BTC to Ivan")
-
-	fmt.Printf("Prev.hash: %x\n", bc.GetBlockByIndex(2).PrevBlockHash)
-	fmt.Printf("Data: %s\n", bc.GetBlockByIndex(2).Data)
-	fmt.Printf("Hash: %x\n", bc.GetBlockByIndex(2).Hash)
+	bc.AddBlock("Send 2 BTC to Ivan")
+	bc.AddBlock("Send 3 BTC to Ivan")
+	for _, bk := range bc.GetBlockchain() {
+		fmt.Printf("Prev.hash: %x\n", bk.PrevBlockHash)
+		fmt.Printf("Data: \"%s\"\n", bk.Data)
+		fmt.Printf("Hash: %x\n", bk.Hash)
+		pow := block.NewProofOfWork(bk)
+		fmt.Printf("PoW: %s\n\n", strconv.FormatBool(pow.Validate()))
+		dao.InsertOne(bk)
+	}
 }
