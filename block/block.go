@@ -74,3 +74,4 @@ func (bc *Blockchain) GetBlockByIndex(index int) *Block {
 func (bc *Blockchain) GetBlockchain() []*Block {
 	return bc.blocks
 }
+
