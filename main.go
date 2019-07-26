@@ -3,11 +3,16 @@ package main
 import (
 	"fmt"
 	"go-bot/block"
+	"go-bot/conn"
 	"go-bot/dao"
+	"go-bot/router"
 	"strconv"
 )
 
 func main() {
+	conn.Init()
+	router.Init()
+	
 	bc := block.GetInstance()
 	bc.AddBlock("Send 1 BTC to Ivan")
 	bc.AddBlock("Send 2 BTC to Ivan")

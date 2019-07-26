@@ -21,7 +21,8 @@ type Env struct {
 
 var mgo *Env
 
-func init() {
+// Init .
+func Init() {
 	mgo = &Env{}
 	client, err := mongo.NewClient(options.Client().ApplyURI(url))
 	ctxWithTimeout := utils.GetCtx()
