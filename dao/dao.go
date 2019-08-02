@@ -6,11 +6,9 @@ import (
 	"go-bot/utils"
 )
 
-var col = conn.GetCollection()
-
 // InsertOne .
 func InsertOne(data interface{}) {
-	_, err := col.InsertOne(utils.GetCtx(), data)
+	_, err := conn.GetCollection().InsertOne(utils.GetCtx(), data)
 	if err != nil {
 		fmt.Println(err)
 	}

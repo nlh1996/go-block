@@ -1,7 +1,10 @@
 package block
 
 import (
+	"go-bot/dao"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Block 区块
@@ -16,6 +19,12 @@ type Block struct {
 // Blockchain 区块链
 type Blockchain struct {
 	blocks []*Block
+}
+
+// BlockchainIterator 区块链迭代器
+type BlockchainIterator struct {
+	currentHash []byte
+	collection  *mongo.Collection
 }
 
 // 单例 。
@@ -59,19 +68,24 @@ func newBlockChain() *Blockchain {
 // }
 
 // AddBlock .
-func (bc *Blockchain) AddBlock(data string) {
+func (bc *Blockchain) AddBlock(data string) int {
 	preBlock := bc.blocks[len(bc.blocks)-1]
 	newBlock := newBlock(data, preBlock.Hash)
 	bc.blocks = append(bc.blocks, newBlock)
+	// 新块存储到数据库
+	dao.InsertOne(newBlock)
+	return len(bc.blocks)-1
 }
 
 // GetBlockByIndex .
 func (bc *Blockchain) GetBlockByIndex(index int) *Block {
-	return bc.blocks[index-1]
+	if index < len(bc.blocks) {
+		return bc.blocks[index]
+	}
+	return nil
 }
 
 // GetBlockchain .
 func (bc *Blockchain) GetBlockchain() []*Block {
 	return bc.blocks
 }
-

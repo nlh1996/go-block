@@ -1,8 +1,7 @@
 package router
 
 import (
-	"go-bot/controller"
-	"go-bot/middleware"
+	"go-bot/controller/ws"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,10 +9,6 @@ import (
 // Init .
 func Init() {
 	router := gin.Default()
-	router.Use(middleware.CrossDomain())
-	v1 := router.Group("/v1")
-	{
-		v1.POST("/addblock", controller.AddBlock)
-	}
-	router.Run(":8080")
+	router.GET("/", ws.Ping)
+	router.Run(":3000")
 }
