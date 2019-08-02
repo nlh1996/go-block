@@ -47,6 +47,10 @@ func newBlock(data string, prevBlockHash []byte) *Block {
 	block.Hash = hash[:]
 	block.Nonce = nonce
 
+	if nonce < 10000000 {
+		// 新块存储到数据库
+		dao.InsertOne(block)
+	}
 	return block
 }
 
@@ -72,14 +76,13 @@ func (bc *Blockchain) AddBlock(data string) int {
 	preBlock := bc.blocks[len(bc.blocks)-1]
 	newBlock := newBlock(data, preBlock.Hash)
 	bc.blocks = append(bc.blocks, newBlock)
-	// 新块存储到数据库
-	dao.InsertOne(newBlock)
-	return len(bc.blocks)-1
+
+	return len(bc.blocks) - 1
 }
 
 // GetBlockByIndex .
 func (bc *Blockchain) GetBlockByIndex(index int) *Block {
-	if index < len(bc.blocks) {
+	if index < len(bc.blocks) && index >= 0 {
 		return bc.blocks[index]
 	}
 	return nil
