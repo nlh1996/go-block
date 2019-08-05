@@ -36,25 +36,29 @@ func Ping(c *gin.Context) {
 			fmt.Println(err)
 			break
 		}
+		// JSON 反序列化struct
 		msg := &data{}
 		json.Unmarshal(message, msg)
 		fmt.Println(msg, mt)
-		message = addBlock(msg.Msg)
-		msg.Msg = fmt.Sprintf("Hash: %x", message)
+		bc := block.GetInstance()
+		if err := bc.AddBlock(msg.Msg); err != nil {
+			fmt.Println(err)
+			v := gin.H{"message": "很遗憾，什么都没有挖到。。。"}
+			ws.WriteJSON(v)
+			return
+		}
+
+		iter := bc.NewIterator()
+		bk := iter.Next()
+		fmt.Printf("%d\n", bk.Timestamp)
+		msg.Msg = fmt.Sprintf("Hash: %x", bk.Hash)
+
+		// JSON序列化，借助gin的gin.H实现
+		v := gin.H{"message": msg.Msg}
+		ws.WriteJSON(v)
+			
 		// 写入ws数据 二进制返回
 		// err = ws.WriteMessage(mt, message)
-		// 返回JSON字符串，借助gin的gin.H实现
-		v := gin.H{"message": msg.Msg}
-		if err = ws.WriteJSON(v); err != nil {
-			fmt.Println(err)
-		}
 	}
 }
 
-func addBlock(msg string) []byte {
-	bc := block.GetInstance()
-	index := bc.AddBlock(msg)
-	bk := bc.GetBlockByIndex(index)
-
-	return bk.Hash
-}

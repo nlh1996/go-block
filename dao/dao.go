@@ -13,3 +13,4 @@ func InsertOne(data interface{}) {
 		fmt.Println(err)
 	}
 }
+

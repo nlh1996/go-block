@@ -49,7 +49,7 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 	var hash [32]byte
 	nonce := 0
 
-	for nonce < 10000000 {
+	for nonce < 100000000 {
 		data := pow.prepareData(nonce)
 		hash = sha256.Sum256(data)
 		hashInt.SetBytes(hash[:])
@@ -63,14 +63,14 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 }
 
 // Validate .
-// func (pow *ProofOfWork) Validate() bool {
-// 	var hashInt big.Int
+func (pow *ProofOfWork) Validate() bool {
+	var hashInt big.Int
 
-// 	data := pow.prepareData(pow.block.Nonce)
-// 	hash := sha256.Sum256(data)
-// 	hashInt.SetBytes(hash[:])
+	data := pow.prepareData(pow.block.Nonce)
+	hash := sha256.Sum256(data)
+	hashInt.SetBytes(hash[:])
 
-// 	isValid := hashInt.Cmp(pow.target) == -1
+	isValid := hashInt.Cmp(pow.target) == -1
 
-// 	return isValid
-// }
+	return isValid
+}

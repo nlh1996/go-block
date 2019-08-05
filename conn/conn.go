@@ -41,3 +41,10 @@ func GetCollection() *mongo.Collection {
 	}
 	return mgo.collection
 }
+
+// SetCollection .
+func SetCollection(str string) {
+	if mgo != nil {
+		mgo.collection = mgo.database.Collection(str)
+	}
+}
