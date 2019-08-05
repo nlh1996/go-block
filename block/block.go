@@ -27,7 +27,7 @@ type Blockchain struct {
 	blocks []*Block
 }
 
-// 单例 。
+// 区块链单例 。
 var instance *Blockchain
 
 // GetInstance .
@@ -43,13 +43,13 @@ func Init() {
 	block := &Block{}
 	opts := options.FindOne()
 	opts.SetSort(bson.M{"timestamp": -1})
-	conn.GetCollection().FindOne(utils.GetCtx(), bson.M{}, opts).Decode(block)
-	if block == nil {
-		instance = nil
+	err := conn.GetCollection().FindOne(utils.GetCtx(), bson.M{}, opts).Decode(block)
+	if err != nil && block.Nonce != 0 {
+		instance = &Blockchain{}
+		instance.blocks = append(instance.blocks, block)
 		return
 	}
-	instance = &Blockchain{}
-	instance.blocks = append(instance.blocks, block)
+	instance = nil
 }
 
 // NewBlock .
@@ -107,11 +107,6 @@ func (bc *Blockchain) GetBlockByIndex(index int) *Block {
 		return bc.blocks[index]
 	}
 	return nil
-}
-
-// GetBlockchain .
-func (bc *Blockchain) GetBlockchain() []*Block {
-	return bc.blocks
 }
 
 // BlockchainIterator 区块链迭代器
