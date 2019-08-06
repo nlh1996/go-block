@@ -1,7 +1,7 @@
 package router
 
 import (
-	"go-bot/controller/ws"
+	"go-bot/ws"
 
 	"github.com/gin-gonic/gin"
 )
