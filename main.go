@@ -2,13 +2,13 @@ package main
 
 import (
 	"go-bot/block"
-	"go-bot/conn"
+	"go-bot/database"
 	"go-bot/router"
 )
 
 func main() {
-	conn.Init()
+	database.Init()
 	block.Init()
-	
+
 	router.Init()
 }

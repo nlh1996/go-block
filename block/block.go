@@ -2,7 +2,7 @@ package block
 
 import (
 	"errors"
-	"go-bot/conn"
+	"go-bot/database"
 	"go-bot/dao"
 	"go-bot/utils"
 	"log"
@@ -43,7 +43,7 @@ func Init() {
 	block := &Block{}
 	opts := options.FindOne()
 	opts.SetSort(bson.M{"timestamp": -1})
-	err := conn.GetCollection().FindOne(utils.GetCtx(), bson.M{}, opts).Decode(block)
+	err := database.GetCollection().FindOne(utils.GetCtx(), bson.M{}, opts).Decode(block)
 	if err != nil && block.Nonce != 0 {
 		instance = &Blockchain{}
 		instance.blocks = append(instance.blocks, block)
@@ -118,7 +118,7 @@ type BlockchainIterator struct {
 // NewIterator .
 func (bc *Blockchain) NewIterator() *BlockchainIterator {
 	bci := &BlockchainIterator{}
-	bci.collection = conn.GetCollection()
+	bci.collection = database.GetCollection()
 
 	return bci
 }
