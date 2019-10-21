@@ -12,6 +12,16 @@ type Pool struct {
 	conns []*Conn
 }
 
+var instance *Pool
+
+// GetPool .
+func GetPool() *Pool {
+	if instance == nil {
+		instance = &Pool{}
+	}
+	return instance
+}
+
 // Conn .
 type Conn struct {
 	ws        *websocket.Conn

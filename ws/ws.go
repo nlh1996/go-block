@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go-bot/block"
 	"go-bot/model"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,7 @@ import (
 
 var upGrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
+		fmt.Println(r.Header["Origin"])
 		return true
 	},
 }
@@ -30,16 +32,16 @@ func Ping(c *gin.Context) {
 		_, message, err := ws.ReadMessage()
 		if err != nil {
 			// 客户端关闭连接时也会进入
-			fmt.Println(err)
+			log.Println(err)
 			break
 		}
 		// JSON 反序列化struct
 		res := &model.Response{}
 		json.Unmarshal(message, res)
-		
+
 		bc := block.GetInstance()
 		if err := bc.AddBlock(res.Msg); err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			v := gin.H{"message": "很遗憾，什么都没有挖到。。。"}
 			ws.WriteJSON(v)
 			return

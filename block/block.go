@@ -3,7 +3,6 @@ package block
 import (
 	"errors"
 	"go-bot/database"
-	"go-bot/dao"
 	"go-bot/utils"
 	"log"
 	"time"
@@ -43,13 +42,17 @@ func Init() {
 	block := &Block{}
 	opts := options.FindOne()
 	opts.SetSort(bson.M{"timestamp": -1})
-	err := database.GetCollection().FindOne(utils.GetCtx(), bson.M{}, opts).Decode(block)
+	err := database.FindOne("blockchain", bson.M{}, block, opts)
 	if err != nil && block.Nonce != 0 {
-		instance = &Blockchain{}
-		instance.blocks = append(instance.blocks, block)
+		log.Println(err)
 		return
 	}
-	instance = nil
+	if block.Nonce == 0 {
+		instance = nil
+		return
+	}
+	instance = &Blockchain{}
+	instance.blocks = append(instance.blocks, block)
 }
 
 // NewBlock .
@@ -63,7 +66,7 @@ func newBlock(data string, prevBlockHash []byte) *Block {
 	// 是否证明通过
 	if pow.Validate() {
 		// 新块存储到数据库
-		dao.InsertOne(block)
+		database.InsertOne("blockchain", block)
 		return block
 	}
 	return nil
@@ -118,7 +121,7 @@ type BlockchainIterator struct {
 // NewIterator .
 func (bc *Blockchain) NewIterator() *BlockchainIterator {
 	bci := &BlockchainIterator{}
-	bci.collection = database.GetCollection()
+	bci.collection = database.Col("blockchain")
 
 	return bci
 }
@@ -130,7 +133,9 @@ func (bci *BlockchainIterator) Next() *Block {
 	if bci.currentHash == nil {
 		opts := options.FindOne()
 		opts.SetSort(bson.M{"timestamp": -1})
-		bci.collection.FindOne(ctx, bson.M{}, opts).Decode(block)
+		if err := bci.collection.FindOne(ctx, bson.M{}, opts).Decode(block); err != nil {
+			log.Println(err)
+		}
 	} else {
 		bci.collection.FindOne(ctx, bson.M{"hash": bci.currentHash}).Decode(block)
 	}
