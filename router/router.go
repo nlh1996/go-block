@@ -9,6 +9,6 @@ import (
 // Init .
 func Init() {
 	router := gin.Default()
-	router.GET("/", ws.Ping)
+	router.GET("/", ws.Handler)
 	router.Run(":3000")
 }
