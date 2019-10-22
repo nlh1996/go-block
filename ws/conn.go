@@ -62,10 +62,7 @@ func (conn *Connection) Start() (data []byte, err error) {
 			bk := iter.Next()
 			fmt.Printf("%d\n", bk.Timestamp)
 			res.Msg = fmt.Sprintf("Hash: %x", bk.Hash)
-
-			// JSON序列化，借助gin的gin.H实现
-			v := gin.H{"data": res}
-			conn.wsConnect.WriteJSON(v)
+			conn.wsConnect.WriteJSON(res)
 		case <-conn.closeChan:
 			err = errors.New("connection is closeed")
 			return
@@ -129,10 +126,10 @@ func (conn *Connection) writeLoop() {
 	for {
 		select {
 		case data = <-conn.outChan:
+			if err = conn.wsConnect.WriteMessage(websocket.TextMessage, data); err != nil {
+				goto ERR
+			}
 		case <-conn.closeChan:
-			goto ERR
-		}
-		if err = conn.wsConnect.WriteMessage(websocket.TextMessage, data); err != nil {
 			goto ERR
 		}
 	}
