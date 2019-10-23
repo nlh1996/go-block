@@ -2,13 +2,28 @@ package main
 
 import (
 	"go-bot/block"
-	"go-bot/conn"
+	"go-bot/database"
 	"go-bot/router"
+	"go-bot/ws"
+	"strconv"
+	"time"
 )
 
 func main() {
-	conn.Init()
+	database.Init()
+	go sendMsg()
 	block.Init()
-	
 	router.Init()
+}
+
+func sendMsg() {
+	p := ws.GetInstance()
+	var i int
+	for {
+		for _,v := range p.Pool {
+			v.WriteMessage([]byte(strconv.Itoa(i)))
+			i++
+		}
+		time.Sleep(3 * time.Second)
+	}
 }
