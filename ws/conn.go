@@ -15,6 +15,7 @@ import (
 
 // Connection .
 type Connection struct {
+	cid       int
 	wsConnect *websocket.Conn
 	inChan    chan []byte
 	outChan   chan []byte
@@ -24,9 +25,12 @@ type Connection struct {
 	isClosed bool       // 防止closeChan被关闭多次
 }
 
+var index int 
 // InitConnection .
 func InitConnection(wsConn *websocket.Conn) *Connection {
+	index++
 	conn := &Connection{
+		cid: index,
 		wsConnect: wsConn,
 		inChan:    make(chan []byte, 1000),
 		outChan:   make(chan []byte, 1000),
@@ -58,7 +62,6 @@ func (conn *Connection) Start() (data []byte, err error) {
 				conn.wsConnect.WriteJSON(v)
 				conn.closeChan <- 0
 			}
-
 			bk := iter.Next()
 			fmt.Printf("%d\n", bk.Timestamp)
 			res.Msg = fmt.Sprintf("Hash: %x", bk.Hash)
@@ -92,6 +95,7 @@ func (conn *Connection) Close() {
 		close(conn.outChan)
 		conn.isClosed = true
 	}
+	delete(GetInstance().Pool, conn.cid)
 	conn.mutex.Unlock()
 }
 

@@ -2,7 +2,7 @@ package ws
 
 // ConnPool .
 type ConnPool struct {
-	Pool []*Connection
+	Pool map[int]*Connection
 }
 
 var instance *ConnPool
@@ -11,6 +11,7 @@ var instance *ConnPool
 func GetInstance() *ConnPool {
 	if instance == nil {
 		instance = &ConnPool{}
+		instance.Pool = make(map[int]*Connection)
 	}
 	return instance
 }

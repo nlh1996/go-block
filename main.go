@@ -20,8 +20,8 @@ func sendMsg() {
 	p := ws.GetInstance()
 	var i int
 	for {
-		if len(p.Pool) != 0 {
-			p.Pool[0].WriteMessage([]byte(strconv.Itoa(i)))
+		for _,v := range p.Pool {
+			v.WriteMessage([]byte(strconv.Itoa(i)))
 			i++
 		}
 		time.Sleep(3 * time.Second)
