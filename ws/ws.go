@@ -21,7 +21,10 @@ func Handler(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	conn := InitConnection(ws)
+	conn, err := InitConnection(ws); if err != nil {
+		ws.WriteMessage(websocket.TextMessage, []byte(err.Error()))
+		return
+	}
 	p := GetInstance()
 	p.Pool[conn.cid] = conn
 	conn.Start()

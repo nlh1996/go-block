@@ -22,21 +22,34 @@ type Connection struct {
 	closeChan chan byte
 
 	mutex    sync.Mutex // 对closeChan关闭上锁
-	isClosed bool       // 防止closeChan被关闭多次
+	IsClosed bool       // 防止closeChan被关闭多次
 }
 
-var index int 
+// 预先定义通道存储id
+var cidCh chan int
+
+func init() {
+	// 定义10100个有效可复用的id
+	cidCh = make(chan int, 10100)
+	for i := 1; i <= 10100; i++ {
+		cidCh <- i
+	}
+}
+
 // InitConnection .
-func InitConnection(wsConn *websocket.Conn) *Connection {
-	index++
+func InitConnection(wsConn *websocket.Conn) (*Connection, error) {
 	conn := &Connection{
-		cid: index,
 		wsConnect: wsConn,
 		inChan:    make(chan []byte, 1000),
 		outChan:   make(chan []byte, 1000),
 		closeChan: make(chan byte, 1),
 	}
-	return conn
+	if len(cidCh) < 100 {
+		err := errors.New("没有可用的连接，请稍后重试！")
+		return nil, err
+	}
+	conn.cid = <-cidCh
+	return conn, nil
 }
 
 // Start .
@@ -56,16 +69,18 @@ func (conn *Connection) Start() (data []byte, err error) {
 			// JSON 反序列化struct
 			res := &model.Response{}
 			json.Unmarshal(data, res)
-			if err := bc.AddBlock(res.Msg); err != nil {
-				log.Println(err)
-				v := gin.H{"message": "很遗憾，什么都没有挖到。。。"}
-				conn.wsConnect.WriteJSON(v)
-				conn.closeChan <- 0
+			if res.Code == 101 {
+				if err := bc.AddBlock(res.Msg); err != nil {
+					log.Println(err)
+					v := gin.H{"message": "很遗憾，什么都没有挖到。。。"}
+					conn.wsConnect.WriteJSON(v)
+					conn.closeChan <- 0
+				}
+				bk := iter.Next()
+				fmt.Printf("%d\n", bk.Timestamp)
+				res.Msg = fmt.Sprintf("Hash: %x", bk.Hash)
+				conn.wsConnect.WriteJSON(res)
 			}
-			bk := iter.Next()
-			fmt.Printf("%d\n", bk.Timestamp)
-			res.Msg = fmt.Sprintf("Hash: %x", bk.Hash)
-			conn.wsConnect.WriteJSON(res)
 		case <-conn.closeChan:
 			err = errors.New("connection is closeed")
 			return
@@ -89,12 +104,13 @@ func (conn *Connection) Close() {
 	conn.wsConnect.Close()
 	// 利用标记，让closeChan只关闭一次
 	conn.mutex.Lock()
-	if !conn.isClosed {
+	if !conn.IsClosed {
 		close(conn.closeChan)
 		close(conn.inChan)
 		close(conn.outChan)
-		conn.isClosed = true
+		conn.IsClosed = true
 	}
+	cidCh <- conn.cid
 	delete(GetInstance().Pool, conn.cid)
 	conn.mutex.Unlock()
 }
