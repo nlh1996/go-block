@@ -74,7 +74,7 @@ func (conn *Connection) Start() (data []byte, err error) {
 					log.Println(err)
 					v := gin.H{"message": "很遗憾，什么都没有挖到。。。"}
 					conn.wsConnect.WriteJSON(v)
-					conn.closeChan <- 0
+					continue
 				}
 				bk := iter.Next()
 				fmt.Printf("%d\n", bk.Timestamp)
@@ -82,7 +82,6 @@ func (conn *Connection) Start() (data []byte, err error) {
 				conn.wsConnect.WriteJSON(res)
 			}
 		case <-conn.closeChan:
-			err = errors.New("connection is closeed")
 			return
 		}
 	}
@@ -104,10 +103,10 @@ func (conn *Connection) Close() {
 	conn.wsConnect.Close()
 	// 利用标记，让closeChan只关闭一次
 	conn.mutex.Lock()
+
 	if !conn.IsClosed {
+		//fmt.Println("连接", conn.cid, "已经关闭！！！")
 		close(conn.closeChan)
-		close(conn.inChan)
-		close(conn.outChan)
 		conn.IsClosed = true
 	}
 	cidCh <- conn.cid
