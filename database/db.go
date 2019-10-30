@@ -63,12 +63,26 @@ func Col(col string) *mongo.Collection {
 // InsertOne .
 func InsertOne(col string, data interface{}) error {
 	_, err := Col(col).InsertOne(utils.GetCtx(), data)
+	if err != nil {
+		log.Println(
+			"mongodb InsertOne failed! db:", GetDB(),
+			", Collection:", col,
+			", ErrInfo:", err,
+		)
+	}
 	return err
 }
 
 // InsertMany .
 func InsertMany(col string, data []interface{}) error {
 	_, err := Col(col).InsertMany(utils.GetCtx(), data)
+	if err != nil {
+		log.Println(
+			"mongodb InsertMany failed! db:", GetDB(),
+			", Collection:", col,
+			", ErrInfo:", err,
+		)
+	}
 	return err
 }
 
@@ -76,9 +90,13 @@ func InsertMany(col string, data []interface{}) error {
 func FindOne(col string, filter interface{}, obj interface{}, opts ...*options.FindOneOptions) error {
 	err := Col(col).FindOne(utils.GetCtx(), filter, opts...).Decode(obj)
 	if err != nil {
-		return err
+		log.Println(
+			"mongodb FindOne failed! db:", GetDB(),
+			", Collection:", col,
+			", ErrInfo:", err,
+		)
 	}
-	return nil
+	return err
 }
 
 // FindAll .
@@ -91,20 +109,27 @@ func FindAll(col string, filter interface{}, obj interface{}) error {
 func DeleteOne(col string, filter interface{}) error {
 	delRes, err := Col(col).DeleteOne(utils.GetCtx(), filter)
 	if err != nil {
-		return err
+		log.Println(
+			"mongodb DeleteOne failed! db:", GetDB(),
+			", Collection:", col,
+			", ErrInfo:", err,
+		)
 	}
 	log.Printf("DeleteOne成功删除了%d条数据。\n", delRes.DeletedCount)
-	return nil
+	return err
 }
 
 // UpdateOne .
 func UpdateOne(col string, filter interface{}, update interface{}) error {
 	updateRes, err := Col(col).UpdateOne(utils.GetCtx(), filter, update)
 	if err != nil {
-		log.Println(*updateRes)
-		return err
+		log.Println(
+			"mongodb UpdateOne failed! db:", GetDB(),
+			", Collection:", col,
+			", ErrInfo:", err, *updateRes,
+		)
 	}
-	return nil
+	return err
 }
 
 // Count .
