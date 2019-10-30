@@ -21,7 +21,8 @@ func Handler(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	conn, err := InitConnection(ws); if err != nil {
+	conn, err := InitConnection(ws)
+	if err != nil {
 		ws.WriteMessage(websocket.TextMessage, []byte(err.Error()))
 		return
 	}

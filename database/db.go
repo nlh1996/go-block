@@ -66,6 +66,12 @@ func InsertOne(col string, data interface{}) error {
 	return err
 }
 
+// InsertMany .
+func InsertMany(col string, data []interface{}) error {
+	_, err := Col(col).InsertMany(utils.GetCtx(), data)
+	return err
+}
+
 // FindOne .
 func FindOne(col string, filter interface{}, obj interface{}, opts ...*options.FindOneOptions) error {
 	err := Col(col).FindOne(utils.GetCtx(), filter, opts...).Decode(obj)
