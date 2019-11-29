@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-type test struct {
-	id int
-}
-
 func main() {
 	database.Init()
 	go sendMsg()
