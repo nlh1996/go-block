@@ -1,7 +1,7 @@
 package router
 
 import (
-	"go-bot/controller"
+	"go-bot/ws"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,16 +25,14 @@ var upGrader = websocket.Upgrader{
 // Handler .
 func Handler(c *gin.Context) {
 	// 升级get请求为webSocket协议
-	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
+	connection, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return
 	}
-	conn, err := InitConnection(ws, controller.CallBack)
+	conn, err := ws.InitConnection(connection)
 	if err != nil {
-		ws.WriteMessage(websocket.TextMessage, []byte(err.Error()))
+		connection.WriteMessage(websocket.TextMessage, []byte(err.Error()))
 		return
 	}
-	p := GetInstance()
-	p.Pool[conn.cid] = conn
 	conn.Start()
 }

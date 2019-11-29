@@ -15,11 +15,10 @@ type Connection struct {
 	outChan   chan []byte
 	closeChan chan byte
 
-	mutex     sync.Mutex // 对closeChan关闭上锁
-	IsClosed  bool       // 防止closeChan被关闭多次
+	mutex    sync.Mutex // 对closeChan关闭上锁
+	IsClosed bool       // 防止closeChan被关闭多次
 
 }
-
 
 // 预先定义通道存储id
 var cidCh chan int
@@ -33,7 +32,7 @@ func init() {
 }
 
 // InitConnection .
-func InitConnection(wsConn *websocket.Conn, callback HandleFunc) (*Connection, error) {
+func InitConnection(wsConn *websocket.Conn) (*Connection, error) {
 	conn := &Connection{
 		wsConnect: wsConn,
 		inChan:    make(chan []byte, 1024),
@@ -46,6 +45,8 @@ func InitConnection(wsConn *websocket.Conn, callback HandleFunc) (*Connection, e
 		return nil, err
 	}
 	conn.cid = <-cidCh
+	p := GetInstance()
+	p.Pool[conn.cid] = conn
 	return conn, nil
 }
 
@@ -59,7 +60,7 @@ func (conn *Connection) Start() (data []byte, err error) {
 	for {
 		select {
 		case data = <-conn.inChan:
-			conn.handleAPI(conn, data, 1024)
+
 		case <-conn.closeChan:
 			return
 		}
