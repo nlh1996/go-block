@@ -1,7 +1,9 @@
 package ws
 
 import (
+	"encoding/json"
 	"errors"
+	"log"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -14,9 +16,8 @@ type Connection struct {
 	inChan    chan []byte
 	outChan   chan []byte
 	closeChan chan byte
-
-	mutex    sync.Mutex // 对closeChan关闭上锁
-	IsClosed bool       // 防止closeChan被关闭多次
+	mutex     sync.Mutex // 对closeChan关闭上锁
+	IsClosed  bool       // 防止closeChan被关闭多次
 
 }
 
@@ -85,9 +86,17 @@ func (conn *Connection) Close() {
 }
 
 // Send .
-func (conn *Connection) Send(data []byte) (err error) {
+func (conn *Connection) Send(msg interface{}) (err error) {
+	msgBytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	log.Println("SEND->", string(msgBytes))
+
 	select {
-	case conn.outChan <- data:
+	case conn.outChan <- msgBytes:
 	case <-conn.closeChan:
 		err = errors.New("connection is closeed")
 	}
@@ -121,7 +130,6 @@ func (conn *Connection) writeLoop() {
 		data []byte
 		err  error
 	)
-
 	for {
 		select {
 		case data = <-conn.outChan:

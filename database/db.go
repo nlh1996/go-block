@@ -1,17 +1,17 @@
 package database
 
 import (
+	"go-bot/env"
 	"log"
-	"user-account/utils"
 
+	"github.com/nlh1996/utils"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	url = "mongodb://localhost:27017"
-	// DBName 数据库名 
-	DBName = "Blocks"
+var (
+	mgoEnv = env.GlobalOblect
+	url    = "mongodb://" + mgoEnv.MgoAddress + ":" + utils.IntToString(mgoEnv.MgoPort)
 )
 
 // Env .
@@ -35,7 +35,7 @@ func Init() {
 	if err != nil {
 		log.Println(err)
 	}
-	mgo.db = mgo.client.Database(DBName)
+	mgo.db = mgo.client.Database(mgoEnv.DBName)
 }
 
 // SetDB .
@@ -65,7 +65,7 @@ func Col(col string) *mongo.Collection {
 func checkErr(col string, funcName string, err error) {
 	log.Println(
 		"mongodb", funcName,
-		"failed! db:", DBName,
+		"failed! db:", mgoEnv.DBName,
 		", Collection:", col,
 		", ErrInfo:", err,
 	)
@@ -99,7 +99,7 @@ func FindOne(col string, filter interface{}, obj interface{}, opts ...*options.F
 }
 
 // Find .
-func Find(col string, filter interface{}, res interface{}, opts ...*options.FindOptions) (error) {
+func Find(col string, filter interface{}, res interface{}, opts ...*options.FindOptions) error {
 	cursor, err := Col(col).Find(utils.GetCtx(), filter, opts...)
 	if err != nil {
 		checkErr(col, "Find", err)

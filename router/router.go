@@ -1,18 +1,21 @@
 package router
 
 import (
+	"go-bot/env"
 	"go-bot/ws"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/nlh1996/utils"
 )
 
 // Init .
 func Init() {
 	router := gin.Default()
 	router.GET("/", Handler)
-	router.Run(":3000")
+	router.Run(":" + utils.IntToString(env.GlobalOblect.Port))
 }
 
 var upGrader = websocket.Upgrader{
@@ -27,6 +30,7 @@ func Handler(c *gin.Context) {
 	// 升级get请求为webSocket协议
 	connection, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
+		log.Println(err)
 		return
 	}
 	conn, err := ws.InitConnection(connection)

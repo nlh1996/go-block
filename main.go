@@ -4,9 +4,12 @@ import (
 	"go-bot/block"
 	"go-bot/database"
 	"go-bot/router"
+
 	"go-bot/ws"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -22,7 +25,7 @@ func sendMsg() {
 	for {
 		for _, v := range p.Pool {
 			if !v.IsClosed {
-				v.WriteMessage([]byte(strconv.Itoa(i)))
+				v.Send(gin.H{"code": strconv.Itoa(i)})
 				i++
 			}
 		}
