@@ -11,12 +11,12 @@ type GlobalObj struct {
 	DBName     string
 }
 
-// GlobalOblect .
-var GlobalOblect *GlobalObj
+// GlobalData .
+var GlobalData *GlobalObj
 
 func init() {
 	// 默认配置
-	GlobalOblect = &GlobalObj{
+	GlobalData = &GlobalObj{
 		Host:       "0.0.0.0",
 		Port:       3000,
 		MgoAddress: "localhost",
@@ -24,5 +24,5 @@ func init() {
 		DBName:     "transaction",
 	}
 	// 读取配置文件
-	utils.ReadFile(GlobalOblect)
+	utils.ReadFile(GlobalData)
 }

@@ -41,6 +41,7 @@ func InitConnection(wsConn *websocket.Conn) (*Connection, error) {
 		closeChan: make(chan byte, 1),
 		IsClosed:  false,
 	}
+	// 连接池可用IP不足100
 	if len(cidCh) < 100 {
 		err := errors.New("没有可用的连接，请稍后重试！")
 		return nil, err
@@ -76,7 +77,7 @@ func (conn *Connection) Close() {
 	conn.mutex.Lock()
 
 	if !conn.IsClosed {
-		//fmt.Println("连接", conn.cid, "已经关闭！！！")
+		log.Println("连接", conn.cid, "已经关闭！！！")
 		close(conn.closeChan)
 		conn.IsClosed = true
 	}

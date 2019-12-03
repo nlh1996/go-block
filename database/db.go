@@ -10,21 +10,21 @@ import (
 )
 
 var (
-	mgoEnv = env.GlobalOblect
+	mgoEnv = env.GlobalData
 	url    = "mongodb://" + mgoEnv.MgoAddress + ":" + utils.IntToString(mgoEnv.MgoPort)
 )
 
-// Env .
-type Env struct {
+// Mgo .
+type Mgo struct {
 	client *mongo.Client
 	db     *mongo.Database
 }
 
-var mgo *Env
+var mgo *Mgo
 
 // Init .
 func Init() {
-	mgo = &Env{}
+	mgo = &Mgo{}
 	opts := options.Client().ApplyURI(url)
 	// 需要账号认证请在SetAuth中填写
 	// opts = opts.SetAuth(options.Credential{})
@@ -35,7 +35,7 @@ func Init() {
 	if err != nil {
 		log.Println(err)
 	}
-	mgo.db = mgo.client.Database(mgoEnv.DBName)
+	mgo.db = SetDB(mgoEnv.DBName)
 }
 
 // SetDB .
