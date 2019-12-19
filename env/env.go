@@ -1,6 +1,10 @@
 package env
 
-import "github.com/nlh1996/utils"
+import (
+	"log"
+
+	"github.com/nlh1996/utils"
+)
 
 // GlobalObj .
 type GlobalObj struct {
@@ -24,5 +28,7 @@ func init() {
 		DBName:     "transaction",
 	}
 	// 读取配置文件
-	utils.ReadFile(GlobalData)
+	if err := utils.ReadFile(GlobalData, "conf/conf.json"); err != nil {
+		log.Panicln(err)
+	}
 }

@@ -15,7 +15,7 @@ import (
 func Init() {
 	router := gin.Default()
 	router.GET("/", Handler)
-	router.Run(":" + utils.IntToString(env.GlobalOblect.Port))
+	router.Run(":" + utils.IntToString(env.GlobalData.Port))
 }
 
 var upGrader = websocket.Upgrader{
@@ -33,10 +33,11 @@ func Handler(c *gin.Context) {
 		log.Println(err)
 		return
 	}
-	conn, err := ws.InitConnection(connection)
+	conn, err := ws.NewConnection(connection)
 	if err != nil {
 		connection.WriteMessage(websocket.TextMessage, []byte(err.Error()))
 		return
 	}
 	conn.Start()
 }
+

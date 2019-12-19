@@ -18,7 +18,7 @@ type Connection struct {
 	closeChan chan byte
 	mutex     sync.Mutex // 对closeChan关闭上锁
 	IsClosed  bool       // 防止closeChan被关闭多次
-
+	router    *Router
 }
 
 // 预先定义通道存储id
@@ -32,14 +32,15 @@ func init() {
 	}
 }
 
-// InitConnection .
-func InitConnection(wsConn *websocket.Conn) (*Connection, error) {
+// NewConnection .
+func NewConnection(wsConn *websocket.Conn) (*Connection, error) {
 	conn := &Connection{
 		wsConnect: wsConn,
 		inChan:    make(chan []byte, 1024),
 		outChan:   make(chan []byte, 1024),
 		closeChan: make(chan byte, 1),
 		IsClosed:  false,
+		router:    &Router{},
 	}
 	// 连接池可用IP不足100
 	if len(cidCh) < 100 {
@@ -62,12 +63,25 @@ func (conn *Connection) Start() (data []byte, err error) {
 	for {
 		select {
 		case data = <-conn.inChan:
-
+			req := Request{
+				conn: conn,
+				data: data,
+			}
+			go func(r *Request) {
+				conn.router.BeforeHandle(r)
+				conn.router.Handle(r)
+				conn.router.AfterHandle(r)
+			}(&req)
 		case <-conn.closeChan:
 			return
 		}
 	}
 }
+
+// AddRouter .
+// func (conn *Connection) AddRouter(r *Router) {
+// 	conn.router = r
+// }
 
 // Close .
 func (conn *Connection) Close() {
@@ -79,10 +93,10 @@ func (conn *Connection) Close() {
 	if !conn.IsClosed {
 		log.Println("连接", conn.cid, "已经关闭！！！")
 		close(conn.closeChan)
+		cidCh <- conn.cid
+		delete(GetInstance().Pool, conn.cid)
 		conn.IsClosed = true
 	}
-	cidCh <- conn.cid
-	delete(GetInstance().Pool, conn.cid)
 	conn.mutex.Unlock()
 }
 
