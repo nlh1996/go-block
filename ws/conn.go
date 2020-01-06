@@ -11,7 +11,7 @@ import (
 
 // Connection .
 type Connection struct {
-	cid       int
+	ID        int
 	wsConnect *websocket.Conn
 	inChan    chan []byte
 	outChan   chan []byte
@@ -47,9 +47,9 @@ func NewConnection(wsConn *websocket.Conn) (*Connection, error) {
 		err := errors.New("没有可用的连接，请稍后重试！")
 		return nil, err
 	}
-	conn.cid = <-cidCh
-	p := GetInstance()
-	p.Pool[conn.cid] = conn
+	conn.ID = <-cidCh
+	p := GetConnPool()
+	p.Set(conn)
 	return conn, nil
 }
 
@@ -67,6 +67,7 @@ func (conn *Connection) Start() (data []byte, err error) {
 				conn: conn,
 				data: data,
 			}
+			// 请求跟路由绑定
 			go func(r *Request) {
 				conn.router.BeforeHandle(r)
 				conn.router.Handle(r)
@@ -91,10 +92,10 @@ func (conn *Connection) Close() {
 	conn.mutex.Lock()
 
 	if !conn.IsClosed {
-		log.Println("连接", conn.cid, "已经关闭！！！")
+		log.Println("连接", conn.ID, "已经关闭！！！")
 		close(conn.closeChan)
-		cidCh <- conn.cid
-		delete(GetInstance().Pool, conn.cid)
+		cidCh <- conn.ID
+		GetConnPool().DelByID(conn.ID)
 		conn.IsClosed = true
 	}
 	conn.mutex.Unlock()

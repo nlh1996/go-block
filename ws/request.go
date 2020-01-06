@@ -9,7 +9,7 @@ import (
 // Request .
 type Request struct {
 	conn *Connection
-	data  []byte
+	data []byte
 }
 
 // Message .
@@ -29,6 +29,11 @@ func (r *Request) GetData() []byte {
 	return r.data
 }
 
+// Send .
+func (r *Request) Send(msg interface{}) (err error) {
+	return r.conn.Send(msg)
+}
+
 // Router .
 type Router struct {
 }
@@ -36,17 +41,17 @@ type Router struct {
 // BeforeHandle .
 func (r *Router) BeforeHandle(req *Request) {
 	fmt.Println("BeforeHandle call...")
-	req.GetConn().Send(gin.H{"msg": "BeforeHandle call..."})
+	req.Send(gin.H{"msg": "BeforeHandle call..."})
 }
 
 // Handle .
 func (r *Router) Handle(req *Request) {
 	fmt.Println("Handle call...")
-	req.GetConn().Send(gin.H{"msg": "Handle call..."})
+	req.Send(gin.H{"msg": "Handle call..."})
 }
 
 // AfterHandle .
 func (r *Router) AfterHandle(req *Request) {
 	fmt.Println("AfterHandle call...")
-	req.GetConn().Send(gin.H{"msg": "AfterHandle call..."})
+	req.Send(gin.H{"msg": "AfterHandle call..."})
 }
