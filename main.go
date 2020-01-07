@@ -19,7 +19,7 @@ func main() {
 }
 
 func sendMsg() {
-	p := ws.GetInstance()
+	p := ws.GetConnPool()
 	var i int
 	for {
 		for _, v := range p.Pool {

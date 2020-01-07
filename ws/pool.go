@@ -5,7 +5,7 @@ import "sync"
 // ConnPool .
 type ConnPool struct {
 	Pool map[int]*Connection
-	*sync.Mutex
+	sync.RWMutex
 }
 
 var instance *ConnPool
