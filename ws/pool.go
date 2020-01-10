@@ -30,8 +30,7 @@ func (p *ConnPool) Set(c *Connection) {
 func (p *ConnPool) GetConnByID(id int) *Connection {
 	p.Lock()
 	defer p.Unlock()
-	v, ok := p.Pool[id]
-	if ok {
+	if v, ok := p.Pool[id]; ok {
 		return v
 	}
 	return nil

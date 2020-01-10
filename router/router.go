@@ -1,9 +1,11 @@
 package router
 
 import (
+	"go-bot/controller/clog"
 	"go-bot/env"
 	"go-bot/ws"
 	"log"
+	"go-bot/middleware"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +16,9 @@ import (
 // Init .
 func Init() {
 	router := gin.Default()
+	router.Use(middleware.CrossDomain())
 	router.GET("/", Handler)
+	router.POST("/clog", clog.LogFromClient)
 	router.Run(":" + utils.IntToString(env.GlobalData.Port))
 }
 
@@ -40,4 +44,3 @@ func Handler(c *gin.Context) {
 	}
 	conn.Start()
 }
-

@@ -11,14 +11,14 @@ import (
 
 // Connection .
 type Connection struct {
-	ID        int
-	wsConnect *websocket.Conn
-	inChan    chan []byte
-	outChan   chan []byte
-	closeChan chan byte
-	mutex     sync.Mutex // 对closeChan关闭上锁
-	IsClosed  bool       // 防止closeChan被关闭多次
-	router    *Router
+	ID         int
+	wsConnect  *websocket.Conn
+	inChan     chan []byte
+	outChan    chan []byte
+	closeChan  chan byte
+	sync.Mutex      // 对closeChan关闭上锁
+	IsClosed   bool // 防止closeChan被关闭多次
+	router     *Router
 }
 
 // 预先定义通道存储id
@@ -89,7 +89,7 @@ func (conn *Connection) Close() {
 	// 线程安全，可多次调用
 	conn.wsConnect.Close()
 	// 利用标记，让closeChan只关闭一次
-	conn.mutex.Lock()
+	conn.Lock()
 
 	if !conn.IsClosed {
 		log.Println("连接", conn.ID, "已经关闭！！！")
@@ -98,7 +98,7 @@ func (conn *Connection) Close() {
 		GetConnPool().DelByID(conn.ID)
 		conn.IsClosed = true
 	}
-	conn.mutex.Unlock()
+	conn.Unlock()
 }
 
 // Send .
