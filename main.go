@@ -7,6 +7,8 @@ import (
 	"go-bot/ws"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -17,12 +19,14 @@ func main() {
 }
 
 func sendMsg() {
-	p := ws.GetInstance()
+	p := ws.GetConnPool()
 	var i int
 	for {
-		for _,v := range p.Pool {
-			v.WriteMessage([]byte(strconv.Itoa(i)))
-			i++
+		for _, v := range p.Pool {
+			if !v.IsClosed {
+				v.Send(gin.H{"code": strconv.Itoa(i)})
+				i++
+			}
 		}
 		time.Sleep(3 * time.Second)
 	}

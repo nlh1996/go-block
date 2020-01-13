@@ -3,7 +3,9 @@ package block
 import (
 	"errors"
 	"go-bot/database"
-	"go-bot/utils"
+
+	"github.com/nlh1996/utils"
+
 	"log"
 	"time"
 

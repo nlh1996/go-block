@@ -1,28 +1,30 @@
 package database
 
 import (
+	"go-bot/env"
 	"log"
-	"user-account/utils"
 
+	"github.com/nlh1996/utils"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	url = "mongodb://localhost:27017"
+var (
+	mgoEnv = env.GlobalData
+	url    = "mongodb://" + mgoEnv.MgoAddress + ":" + utils.IntToString(mgoEnv.MgoPort)
 )
 
-// Env .
-type Env struct {
+// Mgo .
+type Mgo struct {
 	client *mongo.Client
 	db     *mongo.Database
 }
 
-var mgo *Env
+var mgo *Mgo
 
 // Init .
 func Init() {
-	mgo = &Env{}
+	mgo = &Mgo{}
 	opts := options.Client().ApplyURI(url)
 	// 需要账号认证请在SetAuth中填写
 	// opts = opts.SetAuth(options.Credential{})
@@ -33,7 +35,7 @@ func Init() {
 	if err != nil {
 		log.Println(err)
 	}
-	mgo.db = mgo.client.Database("Blocks")
+	mgo.db = SetDB(mgoEnv.DBName)
 }
 
 // SetDB .
@@ -60,9 +62,30 @@ func Col(col string) *mongo.Collection {
 	return nil
 }
 
+func checkErr(col string, funcName string, err error) {
+	log.Println(
+		"mongodb", funcName,
+		"failed! db:", mgoEnv.DBName,
+		", Collection:", col,
+		", ErrInfo:", err,
+	)
+}
+
 // InsertOne .
 func InsertOne(col string, data interface{}) error {
 	_, err := Col(col).InsertOne(utils.GetCtx(), data)
+	if err != nil {
+		checkErr(col, "InsertOne", err)
+	}
+	return err
+}
+
+// InsertMany .
+func InsertMany(col string, data []interface{}) error {
+	_, err := Col(col).InsertMany(utils.GetCtx(), data)
+	if err != nil {
+		checkErr(col, "InsertMany", err)
+	}
 	return err
 }
 
@@ -70,35 +93,41 @@ func InsertOne(col string, data interface{}) error {
 func FindOne(col string, filter interface{}, obj interface{}, opts ...*options.FindOneOptions) error {
 	err := Col(col).FindOne(utils.GetCtx(), filter, opts...).Decode(obj)
 	if err != nil {
-		return err
+		checkErr(col, "FindOne", err)
 	}
-	return nil
+	return err
 }
 
-// FindAll .
-func FindAll(col string, filter interface{}, obj interface{}) error {
-
-	return nil
+// Find .
+func Find(col string, filter interface{}, res interface{}, opts ...*options.FindOptions) error {
+	cursor, err := Col(col).Find(utils.GetCtx(), filter, opts...)
+	if err != nil {
+		checkErr(col, "Find", err)
+	}
+	if err := cursor.All(utils.GetCtx(), res); err != nil {
+		checkErr(col, "Find.All", err)
+	}
+	return err
 }
 
 // DeleteOne .
 func DeleteOne(col string, filter interface{}) error {
 	delRes, err := Col(col).DeleteOne(utils.GetCtx(), filter)
 	if err != nil {
-		return err
+		checkErr(col, "DeleteOne", err)
 	}
 	log.Printf("DeleteOne成功删除了%d条数据。\n", delRes.DeletedCount)
-	return nil
+	return err
 }
 
 // UpdateOne .
 func UpdateOne(col string, filter interface{}, update interface{}) error {
 	updateRes, err := Col(col).UpdateOne(utils.GetCtx(), filter, update)
 	if err != nil {
-		log.Println(*updateRes)
-		return err
+		checkErr(col, "UpdateOne", err)
 	}
-	return nil
+	log.Println("UpdateOne成功修改一条数据", *updateRes)
+	return err
 }
 
 // Count .

@@ -3,48 +3,58 @@ package ws
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"go-bot/block"
-	"go-bot/model"
 	"log"
 	"sync"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
 // Connection .
 type Connection struct {
-	cid       int
-	wsConnect *websocket.Conn
-	inChan    chan []byte
-	outChan   chan []byte
-	closeChan chan byte
-
-	mutex    sync.Mutex // 对closeChan关闭上锁
-	isClosed bool       // 防止closeChan被关闭多次
+	ID         int
+	wsConnect  *websocket.Conn
+	inChan     chan []byte
+	outChan    chan []byte
+	closeChan  chan byte
+	sync.Mutex      // 对closeChan关闭上锁
+	IsClosed   bool // 防止closeChan被关闭多次
+	router     *Router
 }
 
-var index int 
-// InitConnection .
-func InitConnection(wsConn *websocket.Conn) *Connection {
-	index++
-	conn := &Connection{
-		cid: index,
-		wsConnect: wsConn,
-		inChan:    make(chan []byte, 1000),
-		outChan:   make(chan []byte, 1000),
-		closeChan: make(chan byte, 1),
+// 预先定义通道存储id
+var cidCh chan int
+
+func init() {
+	// 定义10100个有效可复用的id
+	cidCh = make(chan int, 10100)
+	for i := 1; i <= 10100; i++ {
+		cidCh <- i
 	}
-	return conn
+}
+
+// NewConnection .
+func NewConnection(wsConn *websocket.Conn) (*Connection, error) {
+	conn := &Connection{
+		wsConnect: wsConn,
+		inChan:    make(chan []byte, 1024),
+		outChan:   make(chan []byte, 1024),
+		closeChan: make(chan byte, 1),
+		IsClosed:  false,
+		router:    &Router{},
+	}
+	// 连接池可用IP不足100
+	if len(cidCh) < 100 {
+		err := errors.New("没有可用的连接，请稍后重试！")
+		return nil, err
+	}
+	conn.ID = <-cidCh
+	p := GetConnPool()
+	p.Set(conn)
+	return conn, nil
 }
 
 // Start .
 func (conn *Connection) Start() (data []byte, err error) {
-	// 区块链单例
-	bc := block.GetInstance()
-	// 区块迭代器
-	iter := bc.NewIterator()
 	// 启动读协程
 	go conn.readLoop()
 	// 启动写协程
@@ -53,50 +63,60 @@ func (conn *Connection) Start() (data []byte, err error) {
 	for {
 		select {
 		case data = <-conn.inChan:
-			// JSON 反序列化struct
-			res := &model.Response{}
-			json.Unmarshal(data, res)
-			if err := bc.AddBlock(res.Msg); err != nil {
-				log.Println(err)
-				v := gin.H{"message": "很遗憾，什么都没有挖到。。。"}
-				conn.wsConnect.WriteJSON(v)
-				conn.closeChan <- 0
+			req := Request{
+				conn: conn,
+				data: data,
 			}
-			bk := iter.Next()
-			fmt.Printf("%d\n", bk.Timestamp)
-			res.Msg = fmt.Sprintf("Hash: %x", bk.Hash)
-			conn.wsConnect.WriteJSON(res)
+			// 请求跟路由绑定
+			go func(r *Request) {
+				conn.router.BeforeHandle(r)
+				conn.router.Handle(r)
+				conn.router.AfterHandle(r)
+			}(&req)
 		case <-conn.closeChan:
-			err = errors.New("connection is closeed")
 			return
 		}
 	}
 }
 
-// WriteMessage .
-func (conn *Connection) WriteMessage(data []byte) (err error) {
-	select {
-	case conn.outChan <- data:
-	case <-conn.closeChan:
-		err = errors.New("connection is closeed")
-	}
-	return
-}
+// AddRouter .
+// func (conn *Connection) AddRouter(r *Router) {
+// 	conn.router = r
+// }
 
 // Close .
 func (conn *Connection) Close() {
 	// 线程安全，可多次调用
 	conn.wsConnect.Close()
 	// 利用标记，让closeChan只关闭一次
-	conn.mutex.Lock()
-	if !conn.isClosed {
+	conn.Lock()
+
+	if !conn.IsClosed {
+		log.Println("连接", conn.ID, "已经关闭！！！")
 		close(conn.closeChan)
-		close(conn.inChan)
-		close(conn.outChan)
-		conn.isClosed = true
+		cidCh <- conn.ID
+		GetConnPool().DelByID(conn.ID)
+		conn.IsClosed = true
 	}
-	delete(GetInstance().Pool, conn.cid)
-	conn.mutex.Unlock()
+	conn.Unlock()
+}
+
+// Send .
+func (conn *Connection) Send(msg interface{}) (err error) {
+	msgBytes, err := json.Marshal(msg)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	log.Println("SEND->", string(msgBytes))
+
+	select {
+	case conn.outChan <- msgBytes:
+	case <-conn.closeChan:
+		err = errors.New("connection is closeed")
+	}
+	return
 }
 
 // 内部实现
@@ -126,7 +146,6 @@ func (conn *Connection) writeLoop() {
 		data []byte
 		err  error
 	)
-
 	for {
 		select {
 		case data = <-conn.outChan:

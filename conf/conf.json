@@ -1,0 +1,7 @@
+{
+  "Host": "0.0.0.0",
+  "Port": 3000,
+  "MgoAddress": "localhost",
+  "MgoPort": 27017,
+  "DBName": "Blocks"
+}
