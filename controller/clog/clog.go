@@ -31,7 +31,7 @@ func LogFromClient(c *gin.Context) {
 	arr := strings.Split(data.LogArray, ",")
 	for _, v := range arr {
 		d := strings.Split(v[16:], "%")
-		var decodeData string
+		decodeData := d[0]
 		if d[0][len(d[0])-1] == 48 {
 			decodeData = d[0] + "="
 		}
@@ -42,7 +42,16 @@ func LogFromClient(c *gin.Context) {
 		if err != nil {
 			log.Println(err.Error(), string(res), decodeData)
 		}
-		fmt.Println(string(res))
+		str := string(res)
+		if str != "" {
+			str = strings.Replace(str, "%7B", "{", -1)
+			str = strings.Replace(str, "%22", "\"", -1)
+			str = strings.Replace(str, "%3A", ":", -1)
+			str = strings.Replace(str, "%7D", "}", -1)
+			str = strings.Replace(str, "%20", " ", -1)
+			fmt.Println(str)
+		} 
 	}
+	
 	c.String(200, "ok")
 }
