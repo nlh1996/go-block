@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	mgoEnv = env.GlobalData
+	mgoEnv = env.GlobalData.Server
 	url    = "mongodb://" + mgoEnv.MgoAddress + ":" + utils.IntToString(mgoEnv.MgoPort)
 )
 

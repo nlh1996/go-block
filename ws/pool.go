@@ -1,6 +1,9 @@
 package ws
 
-import "sync"
+import (
+	"go-bot/env"
+	"sync"
+)
 
 // ConnPool .
 type ConnPool struct {
@@ -14,7 +17,7 @@ var instance *ConnPool
 func GetConnPool() *ConnPool {
 	if instance == nil {
 		instance = &ConnPool{}
-		instance.Pool = make(map[int]*Connection)
+		instance.Pool = make(map[int]*Connection, env.GlobalData.Conn.PoolConnNum)
 	}
 	return instance
 }

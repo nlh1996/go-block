@@ -1,7 +1,15 @@
 {
-  "Host": "0.0.0.0",
-  "Port": 3000,
-  "MgoAddress": "localhost",
-  "MgoPort": 27017,
-  "DBName": "Blocks"
+  "Server": {
+    "Host": "0.0.0.0",
+    "Port": 3000,
+    "MgoAddress": "localhost",
+    "MgoPort": 27017,
+    "DBName": "Blocks"
+  },
+
+  "Conn": {
+    "PoolConnNum": 15000,
+    "MaxConnNum": 3
+  }
 }
+

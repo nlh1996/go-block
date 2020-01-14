@@ -3,6 +3,7 @@ package ws
 import (
 	"encoding/json"
 	"errors"
+	"go-bot/env"
 	"log"
 	"sync"
 
@@ -25,9 +26,10 @@ type Connection struct {
 var cidCh chan int
 
 func init() {
-	// 定义10100个有效可复用的id
-	cidCh = make(chan int, 10100)
-	for i := 1; i <= 10100; i++ {
+	// 定义可复用的id额外预留100个id
+	len := env.GlobalData.Conn.MaxConnNum + 100
+	cidCh = make(chan int, len)
+	for i := 1; i <= len; i++ {
 		cidCh <- i
 	}
 }
@@ -42,8 +44,8 @@ func NewConnection(wsConn *websocket.Conn) (*Connection, error) {
 		IsClosed:  false,
 		router:    &Router{},
 	}
-	// 连接池可用IP不足100
-	if len(cidCh) < 100 {
+	// 连接池可用IP不足,预留的100防止高并发，其它协程抢夺
+	if len(cidCh) <= 100 {
 		err := errors.New("没有可用的连接，请稍后重试！")
 		return nil, err
 	}

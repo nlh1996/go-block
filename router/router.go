@@ -19,7 +19,7 @@ func Init() {
 	router.Use(middleware.CrossDomain())
 	router.GET("/", Handler)
 	router.POST("/clog", clog.LogFromClient)
-	router.Run(":" + utils.IntToString(env.GlobalData.Port))
+	router.Run(":" + utils.IntToString(env.GlobalData.Server.Port))
 }
 
 var upGrader = websocket.Upgrader{

@@ -52,6 +52,6 @@ func LogFromClient(c *gin.Context) {
 			fmt.Println(str)
 		} 
 	}
-	
+	 
 	c.String(200, "ok")
 }
