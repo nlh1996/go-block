@@ -25,6 +25,7 @@ func LogFromClient(c *gin.Context) {
 	data := &logData{}
 	if err := c.Bind(data); err != nil {
 		log.Println(err)
+		return
 	}
 
 	var enc = base64.StdEncoding

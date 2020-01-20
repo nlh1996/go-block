@@ -44,7 +44,7 @@ func NewConnection(wsConn *websocket.Conn) (*Connection, error) {
 		IsClosed:  false,
 		router:    &Router{},
 	}
-	// 连接池可用IP不足,预留的100防止高并发，其它协程抢夺
+	// 连接池可用ID不足,预留的100防止高并发，其它协程抢夺
 	if len(cidCh) <= 100 {
 		err := errors.New("没有可用的连接，请稍后重试！")
 		return nil, err
@@ -116,7 +116,7 @@ func (conn *Connection) Send(msg interface{}) (err error) {
 	select {
 	case conn.outChan <- msgBytes:
 	case <-conn.closeChan:
-		err = errors.New("connection is closeed")
+		err = errors.New("connection is closed")
 	}
 	return
 }
