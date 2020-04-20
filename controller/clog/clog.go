@@ -43,6 +43,7 @@ func LogFromClient(c *gin.Context) {
 		res, err := enc.DecodeString(decodeData)
 		if err != nil {
 			log.Println(err.Error(), string(res), decodeData)
+			break
 		}
 
 		str, err2 := url.QueryUnescape(string(res))
