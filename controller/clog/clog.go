@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"net/url"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,7 @@ func LogFromClient(c *gin.Context) {
 	data := &logData{}
 	if err := c.Bind(data); err != nil {
 		log.Println(err)
+		return
 	}
 
 	var enc = base64.StdEncoding
@@ -42,16 +44,15 @@ func LogFromClient(c *gin.Context) {
 		if err != nil {
 			log.Println(err.Error(), string(res), decodeData)
 		}
-		str := string(res)
-		if str != "" {
-			str = strings.Replace(str, "%7B", "{", -1)
-			str = strings.Replace(str, "%22", "\"", -1)
-			str = strings.Replace(str, "%3A", ":", -1)
-			str = strings.Replace(str, "%7D", "}", -1)
-			str = strings.Replace(str, "%20", " ", -1)
-			fmt.Println(str)
-		} 
+
+		str, err2 := url.QueryUnescape(string(res))
+		if err2 != nil {
+			log.Println(err2)
+			break
+		}
+		fmt.Println(str)
 	}
-	
+
 	c.String(200, "ok")
 }
+
